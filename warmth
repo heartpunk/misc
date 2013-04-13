@@ -1,13 +1,27 @@
 #!/usr/bin/env ruby
 
-32.times do
-  fork do
-    begin
-      while true
-        true
+def run_benchmark
+  before = Time.now
+  1000.times { 1 + 1 }
+  Time.now - before
+end
+
+initial_timing = ((0..5).map {run_benchmark}.inject(0) {|a,b| a+b}) / 5
+thread_count = 1
+
+while true do
+  current_timing = run_benchmark
+  if (current_timing * 1.2) < initial_timing
+    thread_count += 1
+    puts "adding another thread.  total count will be at #{thread_count}"
+    fork do
+      begin
+        while true
+          true
+        end
+      rescue Interrupt
+        exit 0
       end
-    rescue Interrupt
-      exit 0
     end
   end
 end
