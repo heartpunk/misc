@@ -1,70 +1,42 @@
+import Base.*
+import Base.+
+import Base./
+
 type BinaryProbability
-  positive::Float64
+  p::Float64
 end
 
-negative(p::BinaryProbability) = 1 - p.positive # this makes the syntax asymmetrical. which sucks.
-
-negative(BinaryProbability(0.9))
-
 type ConditionalBinaryProbability
-  given::String
+  given::Bool
   initial::BinaryProbability
   secondary::BinaryProbability
 end
 
-function inverse_p (p)
-  1 - p
+complement(p) = 1 - p
+complement(p::BinaryProbability) = BinaryProbability(complement(p.p))
+
+*(x::BinaryProbability, y::BinaryProbability) = BinaryProbability(x.p * y.p)
++(x::BinaryProbability, y::BinaryProbability) = BinaryProbability(x.p + y.p)
+/(x::BinaryProbability, y::BinaryProbability) = BinaryProbability(x.p / y.p)
+
+p_given(conditional::ConditionalBinaryProbability, given::Bool) = given ? conditional.initial : complement(conditional.initial)
+p_given(conditional::ConditionalBinaryProbability) = p_given(conditional, true)
+p_conditioned(conditional::ConditionalBinaryProbability, desired::Bool) = desired ? conditional.secondary : complement(conditional.secondary)
+
+function probability_of_conditioned_event(conditionals::Array{ConditionalBinaryProbability,1}, desired::Bool)
+  num = BinaryProbability(0.0)
+  denom = BinaryProbability(0.0)
+  for conditional in conditionals
+    num += p_given(conditional) * p_conditioned(conditional, desired)
+    denom += sum([p_given(conditional, conditional.given) * p_conditioned(conditional, fake_desired) for fake_desired = [true, false]])
+  end
+  num / denom
 end
 
 P_coin_a = BinaryProbability(0.5)
-P_coin_b_given_h_coin_a = ConditionalBinaryProbability("positive", P_coin_a, BinaryProbability(0.9))
-P_coin_c_given_t_coin_a = ConditionalBinaryProbability("negative", P_coin_a, BinaryProbability(0.2))
+P_coin_b_given_h_coin_a = ConditionalBinaryProbability(true, P_coin_a, BinaryProbability(0.9))
+P_coin_c_given_t_coin_a = ConditionalBinaryProbability(false, P_coin_a, BinaryProbability(0.2))
 
-function p_given(conditional::ConditionalBinaryProbability)
-  if conditional.given == "positive"
-    conditional.initial.positive
-  elseif conditional.given == "negative"
-    negative(conditional.initial)
-  else
-    println("this should never happen")
-  end
-end
+probability_of_conditioned_event(conditional::ConditionalBinaryProbability, desired) = probability_of_conditioned_event([conditional], desired)
 
-function p_given(conditional::ConditionalBinaryProbability, given::String)
-  if given == "positive"
-    conditional.initial.positive
-  elseif given == "negative"
-    negative(conditional.initial)
-  else
-    println("this should never happen OH MY GOD")
-  end
-end
-
-function p_conditioned(conditional::ConditionalBinaryProbability, desired::String)
-  if desired == "positive"
-    conditional.initial.positive
-  elseif desired == "negative"
-    negative(conditional.initial)
-  else
-    println("this should never happen (norly)")
-  end
-end
-
-# TODO: this needs to be generalized to many conditionals and then it can replace the function below.
-function total_probability_of_conditioned_event(conditional::ConditionalBinaryProbability, desired)
-  num = p_given(conditional) * p_conditioned(conditional, desired)
-  denom = sum([p_given(conditional, fake_given) * p_conditioned(conditional, fake_desired)
-    for fake_given = ["positive", "negative"], fake_desired = "positive", "negative"])
-  num / denom
-end
-
-function P_h2 (P_h_coin_a, P_h_coin_b_given_h_coin_a, P_t_coin_c_given_t_coin_a)
-  denom, num = 0
-
-  num = P_h_coin_a * P_h_coin_b_given_h_coin_a + inverse_p(P_h_coin_a) * inverse_p(P_t_coin_c_given_t_coin_a)
-  denom = num + P_h_coin_a * inverse_p(P_h_coin_b_given_h_coin_a) + inverse_p(P_h_coin_a) * P_t_coin_c_given_t_coin_a
-
-  num / denom
-end
-
-println(P_h2(0.5, 0.9, 0.8))
+println(probability_of_conditioned_event([P_coin_c_given_t_coin_a, P_coin_b_given_h_coin_a], true))
