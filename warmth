@@ -1,32 +1,64 @@
 #!/usr/bin/env ruby
 
+
 def run_benchmark
   before = Time.now
   1000.times { 1 + 1 }
   Time.now - before
 end
 
-initial_timing = ((0..5).map {run_benchmark}.inject(0) {|a,b| a+b}) / 5
-thread_count = 1
+def get_cpu_count opts={}
+  extra_loops = opts.fetch :extra_loops, 100
+  go_forever = opts.fetch :go_forever, false
+  initial_timing = opts.fetch :initial_timing, (((0..5).map {run_benchmark}.inject(0) {|a,b| a+b}) / 5)
 
-while true do
-  current_timing = run_benchmark
-  if (current_timing * 1.2) < initial_timing
-    thread_count += 1
-    puts "adding another thread.  total count will be at #{thread_count}"
-    fork do
-      begin
-        while true
-          true
+  old_cpu_count, cpu_count = 1, 1
+  epsilon, old_epsilon = 0, 0
+  i = 0
+  pids = []
+
+  while (i < extra_loops) or go_forever
+    current_timing = run_benchmark
+    old_epsilon = epsilon
+    epsilon = (current_timing - initial_timing).abs
+    if (current_timing * 1.2) < initial_timing
+      cpu_count += 1
+      pids << fork do
+        begin
+          while true
+            true
+          end
+        rescue Interrupt
+          exit 0
         end
-      rescue Interrupt
-        exit 0
       end
+      yield cpu_count, old_cpu_count if block_given?
+    end
+    i += 1 if old_cpu_count == cpu_count and not go_forever
+    old_cpu_count = cpu_count
+    puts "cpu_count = #{cpu_count}, old_cpu_count = #{old_cpu_count}, i = #{i}, epsilon = #{epsilon*1_000_000}, old_epsilon = #{old_epsilon*1_000_000}"
+    sleep 0.5
+  end
+
+  if go_forever
+    begin
+      Process.wait
+    rescue Interrupt
+      exit 0
+    end
+  else
+    pids.each do |pid|
+      Process.kill 9, pid
     end
   end
+
+  cpu_count
 end
-begin
-  Process.wait
-rescue Interrupt
-  exit 0
-end
+
+# get_cpu_count go_forever: true do |cur_count, old_count|
+#   # if cur_count != old_count
+#     puts "adding another thread.  total count will be at #{cur_count}"
+#   # end
+# end
+
+puts "this machine has #{get_cpu_count} cpus (or more)."
