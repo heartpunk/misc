@@ -32,26 +32,9 @@
 
 	var selection = divs.data(data);
 
-	// this is just the same thing the tutorial does, pulled out to be a function
-	// so that we can re-use it for updating.
-	function styler(d) { return x(d.awesomeness) + "px"; }
-
         selection.enter().append("div")
-              .style("width", styler)
+              .style("width", function () {x(d.awesomeness) + "px";})
               .text(function(d) { return d.name; });
-
-	function id(thing) {return thing;};
-
-	window.setTimeout(function () {
-          truncatedData = data.slice(1,4);
-	  selection.data(truncatedData).exit().remove();
-	}, 1500);
-
-	window.setTimeout(function () {
-          updatedData = data.slice(1,4);
-          updatedData[2].awesomeness = 13;
-	  selection.data(truncatedData).style("width", styler);
-	}, 4500);
       </script>                                                                   
    </body>                                                                        
 </html>
