@@ -1,0 +1,57 @@
+<html>                                                                            
+   <head>                                                                         
+      <meta charset="UTF-8">
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.js"></script>                        
+      <style>
+        .chart div {
+          font: 10px sans-serif;
+          background-color: steelblue;
+          text-align: right;
+          padding: 3px;
+          margin: 1px;
+          color: white;
+        }
+      </style>
+   </head>                                                                        
+   <body>                                                                         
+      <div class="chart"></div>
+      <script type="text/javascript">                                             
+	var data = [
+    	  {"name": "bananas", "awesomeness": 3},
+    	  {"name": "apples", "awesomeness": 5},
+    	  {"name": "kiwis", "awesomeness": 30},
+    	  {"name": "pomegranates", "awesomeness": 42},
+	];
+
+	var x = d3.scale.linear()
+          .domain([0, d3.max(data, function (el) {return el.awesomeness})])
+          .range([0, 1000]);
+
+	divs = d3.select(".chart")
+                 .selectAll("div");
+
+	var selection = divs.data(data);
+
+	// this is just the same thing the tutorial does, pulled out to be a function
+	// so that we can re-use it for updating.
+	function styler(d) { return x(d.awesomeness) + "px"; }
+
+        selection.enter().append("div")
+              .style("width", styler)
+              .text(function(d) { return d.name; });
+
+	function id(thing) {return thing;};
+
+	window.setTimeout(function () {
+          truncatedData = data.slice(1,4);
+	  selection.data(truncatedData).exit().remove();
+	}, 1500);
+
+	window.setTimeout(function () {
+          updatedData = data.slice(1,4);
+          updatedData[2].awesomeness = 13;
+	  selection.data(truncatedData).style("width", styler);
+	}, 4500);
+      </script>                                                                   
+   </body>                                                                        
+</html>
