@@ -25,16 +25,41 @@
 
 	var x = d3.scale.linear()
           .domain([0, d3.max(data, function (el) {return el.awesomeness})])
-          .range([0, 1000]);
+          .range([0, 650]);
 
-	divs = d3.select(".chart")
-                 .selectAll("div");
+	chart = d3.select(".chart");
+	divs = chart.selectAll("div");
 
 	var selection = divs.data(data);
 
-        selection.enter().append("div")
-              .style("width", function () {x(d.awesomeness) + "px";})
-              .text(function(d) { return d.name; });
+	function update(data) {
+	  function styler (d) {return x(d.awesomeness) + "px";}
+
+          var newSelection = chart.selectAll("div")
+            .data(data, function (d) {return d.name});
+
+	  newSelection.exit().remove();
+
+          newSelection.enter().append("div")
+	        .attr("name", function (d) { return d.name })
+                .style("width", styler)
+                .text(function (d) { return d.name; });
+
+	  newSelection.style("width", styler);
+	}
+
+	update(data);
+
+	window.setTimeout(function () {
+          truncatedData = data.slice(1,4);
+	  update(truncatedData);
+	}, 1500);
+
+	window.setTimeout(function () {
+          updatedData = data.slice(1,4);
+          updatedData[2].awesomeness = 10;
+	  update(updatedData);
+	}, 4500);
       </script>                                                                   
    </body>                                                                        
 </html>
