@@ -33,19 +33,31 @@
 	var selection = divs.data(data);
 
 	function update(data) {
+	  // just for convenience so we don't have to write this code twice.
 	  function styler (d) {return x(d.awesomeness) + "px";}
+
+          // warning! you MUST make a new selection for every update cycle.
+          // i do not understand why yet, but this is the thing that seemed
+          // to make it all work.
 
           var newSelection = chart.selectAll("div")
             .data(data, function (d) {return d.name});
 
+	  // tell it what to do when things are removed.
 	  newSelection.exit().remove();
 
+	  // tell it what to do to new elements.
           newSelection.enter().append("div")
 	        .attr("name", function (d) { return d.name })
                 .style("width", styler)
                 .text(function (d) { return d.name; });
 
+          // the update selection is the default, so I don't specify update
+          // here, but this is really what to do on updates.
 	  newSelection.style("width", styler);
+
+          // if you place any more enter selection based actions after the update,
+          // then it will be applied to the update selection as well.
 	}
 
 	update(data);
