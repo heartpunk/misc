@@ -42,6 +42,10 @@
 
           var newSelection = chart.selectAll("div")
             .data(data, function (d) {return d.name});
+          // this here  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          // it is a 'key function'. it tells d3 how to compare elements, to
+          // decide what's new and what isn't. without it, everything would
+          // be compared based on place in the array.
 
 	  // tell it what to do when things are removed.
 	  newSelection.exit().remove();
