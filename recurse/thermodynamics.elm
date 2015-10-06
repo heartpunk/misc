@@ -54,17 +54,19 @@ newPos x vx =
   else x + vx
 
 newVel : Float -> Float -> Float
-newVel x vx                    = if (collided x vx) then -vx else vx
+newVel x vx = if (collided x vx) then -vx else vx
 
 update : Float -> Model -> Model
 update dt model =
-  let currentCollidedPairs           = collidedPairs (pairs model)
+  let currentCollidedPairs    = collidedPairs (pairs model)
       discCollided discRecord =
-        not (List.isEmpty (
-          List.filter
-            (\(a,b) -> (a == discRecord) || (b == discRecord))
-            currentCollidedPairs
-        ))
+        not (
+             List.isEmpty (
+                           List.filter
+                                 (\(a,b) -> (a == discRecord) || (b == discRecord))
+                                 currentCollidedPairs
+                          )
+            )
       updatedRecord discRecord =
         { discRecord |
           x        <- newPos discRecord.x discRecord.vx,
