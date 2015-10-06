@@ -35,10 +35,13 @@ lowerBound = -upperBound
 update : Float -> Model -> Model
 update dt model =
   let truncateToBounds upper lower a = if a > upper then upper else (if a < lower then lower else a)
-      collided x vx = (x > (upperBound - discRadius)) || (x < (lowerBound))
-      newPos x vx   = if (collided x vx) then (truncateToBounds (upperBound - discRadius) (lowerBound + discRadius) x) else x + vx
-      newVel x vx   = if (collided x vx) then -vx else vx
-      currentCollidedPairs = collidedPairs (pairs model)
+      collided x vx                  = (x > (upperBound - discRadius)) || (x < (lowerBound))
+      newPos x vx                    =
+        if (collided x vx)
+        then (truncateToBounds (upperBound - discRadius) (lowerBound + discRadius) x)
+        else x + vx
+      newVel x vx                    = if (collided x vx) then -vx else vx
+      currentCollidedPairs           = collidedPairs (pairs model)
       discCollided discRecord =
         not (List.isEmpty (
           List.filter
