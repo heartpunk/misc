@@ -26,22 +26,39 @@ type alias DiscRecord =
   , collided : Bool
   }
 
+collageSize : Float
 collageSize = 500
+
+discSize : Float
 discSize = 10
+
+discRadius : Float
 discRadius = (discSize / 2) + 5
+
+upperBound : Float
 upperBound = collageSize / 2
+
+lowerBound : Float
 lowerBound = -upperBound
+
+truncateToBounds : Float -> Float -> Float -> Float
+truncateToBounds upper lower a = if a > upper then upper else (if a < lower then lower else a)
+
+collided : Float -> Float -> Bool
+collided x vx = (x > (upperBound - discRadius)) || (x < (lowerBound))
+
+newPos : Float -> Float -> Float
+newPos x vx =
+  if (collided x vx)
+  then (truncateToBounds (upperBound - discRadius) (lowerBound + discRadius) x)
+  else x + vx
+
+newVel : Float -> Float -> Float
+newVel x vx                    = if (collided x vx) then -vx else vx
 
 update : Float -> Model -> Model
 update dt model =
-  let truncateToBounds upper lower a = if a > upper then upper else (if a < lower then lower else a)
-      collided x vx                  = (x > (upperBound - discRadius)) || (x < (lowerBound))
-      newPos x vx                    =
-        if (collided x vx)
-        then (truncateToBounds (upperBound - discRadius) (lowerBound + discRadius) x)
-        else x + vx
-      newVel x vx                    = if (collided x vx) then -vx else vx
-      currentCollidedPairs           = collidedPairs (pairs model)
+  let currentCollidedPairs           = collidedPairs (pairs model)
       discCollided discRecord =
         not (List.isEmpty (
           List.filter
@@ -58,6 +75,7 @@ update dt model =
         }
   in map updatedRecord model
 
+disc : Color -> Form
 disc color =
   group
     [ filled color (circle discSize)
